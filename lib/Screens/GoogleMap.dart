@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+//FIXME:Search buton altındaki pusula kaldırılacak.
 class GoogleMaps extends StatefulWidget {
   const GoogleMaps({Key? key}) : super(key: key);
 
@@ -11,107 +12,119 @@ class GoogleMaps extends StatefulWidget {
 
 class _GoogleMapsState extends State<GoogleMaps> {
   late GoogleMapController mapController;
-
+  MapType mapStatus = MapType.normal;
   List<Marker> _marker = [];
-  LatLng? location;
+  double? lt;
+  double? lng;
   String? searchAdress;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        alignment: Alignment.center,
-        children: [
-          GoogleMap(
-            myLocationButtonEnabled: true,
-            myLocationEnabled: true,
-            zoomControlsEnabled: true,
-            initialCameraPosition: _kGooglePlex,
-            mapType: MapType.normal,
-            markers: _marker.toSet(),
-            //onTap: _handleTap,
-            onCameraMove: (position) {
-              setState(() {
-                _marker.first =
-                    _marker.first.copyWith(positionParam: position.target);
-                print(position);
-              });
-            },
-            onMapCreated: (GoogleMapController map) {
-              Marker marker = const Marker(
-                visible: false,
-                markerId: MarkerId('0'),
-                position: LatLng(37, 40),
-              );
-              _marker.add(marker);
-              mapController = map;
-              //map oluşturma logicleri custom marker vs
-            },
-          ),
-          Image.asset(
-            'images/pin.png',
-            height: 55,
-            width: 55,
-            frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-              return Transform.translate(
-                offset: const Offset(0, -25),
-                child: child,
-              );
-            },
-          ),
-          Positioned(
-            left: 15,
-            right: 15,
-            top: 30,
-            child: SizedBox(
-              height: 55,
-              width: MediaQuery.of(context).size.width - 50,
-              child: TextField(
-                onChanged: (value) {
-                  setState(() {
-                    searchAdress = value;
-                  });
-                },
-                decoration: InputDecoration(
-                  contentPadding: const EdgeInsets.only(left: 10),
-                  suffixIcon: IconButton(
-                    onPressed: () {
-                      searchNavigate();
+      body: Container(
+        height: MediaQuery.of(context).size.height,
+        width: MediaQuery.of(context).size.width,
+        //  clipBehavior: Clip.antiAlias,
+        // decoration: const BoxDecoration(
+        //     borderRadius: BorderRadius.all(Radius.circular(49))),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            GoogleMap(
+              myLocationEnabled: true,
+              zoomControlsEnabled: true,
+              initialCameraPosition: _kGooglePlex,
+              mapType: mapType(),
+              markers: _marker.toSet(),
+              //onTap: _handleTap,
+              onCameraMove: move,
+              onMapCreated: (GoogleMapController map) {
+                Marker marker = const Marker(
+                  visible: false,
+                  markerId: MarkerId('0'),
+                  position: LatLng(37, 40),
+                );
+
+                _marker.add(marker);
+                mapController = map;
+              },
+            ),
+            Image.asset(
+              'images/pin.png',
+              height: 50,
+              width: 50,
+              frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+                return Transform.translate(
+                  offset: const Offset(0, -20),
+                  child: child,
+                );
+              },
+            ),
+            Positioned(
+              left: 15,
+              right: 15,
+              top: 30,
+              child: SizedBox(
+                height: 55,
+                width: MediaQuery.of(context).size.width - 50,
+                child: Theme(
+                  data: themeData(),
+                  child: TextField(
+                    onChanged: (value) {
+                      setState(() {
+                        searchAdress = value;
+                      });
                     },
-                    icon: Icon(Icons.search),
-                  ),
-                  filled: true,
-                  hintText: "Adres Girin",
-                  fillColor: Colors.white,
-                  border: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(20),
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.only(left: 15),
+                      suffixIcon: IconButton(
+                        tooltip: "Adres Ara",
+                        onPressed: () {
+                          searchNavigate();
+                        },
+                        icon: Icon(
+                          Icons.search,
+                          color: Colors.green.shade900,
+                        ),
+                      ),
+                      filled: true,
+                      hintText: "Adres Girin",
+                      fillColor: Colors.green.shade300,
+                      border: const OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.green),
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(20),
+                        ),
+                      ),
                     ),
+                    style: TextStyle(color: Colors.black),
                   ),
                 ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 50.0),
-            child: Align(
-              alignment: Alignment.bottomLeft,
-              child: IconButton(
-                onPressed: () {
-                  mapController
-                      .animateCamera(CameraUpdate.newLatLngZoom(location!, 17));
-                  getAdressFromLatLng();
-                  print("$location");
-                },
-                tooltip: "Seçili Adrese Git",
-                icon: const Icon(
-                  Icons.map,
-                  color: Colors.indigo,
-                  size: 36,
+            Padding(
+              padding: const EdgeInsets.only(bottom: 50.0),
+              child: Align(
+                alignment: Alignment.bottomLeft,
+                child: IconButton(
+                  onPressed: () {
+                    setState(() {
+                      mapStatus;
+                    });
+
+                    print(mapStatus);
+                    //getAdressFromLatLng();
+                  },
+                  tooltip: "Seçili adrese git",
+                  icon: Icon(
+                    Icons.map,
+                    color: Colors.green.shade700,
+                    size: 36,
+                  ),
                 ),
               ),
-            ),
-          )
-        ],
+            )
+          ],
+        ),
       ),
     );
   }
@@ -122,21 +135,47 @@ class _GoogleMapsState extends State<GoogleMaps> {
       mapController.animateCamera(
         CameraUpdate.newCameraPosition(
           CameraPosition(
-              target: LatLng(value[0].latitude, value[0].longitude), zoom: 20),
+              target: LatLng(value.first.latitude, value.first.longitude),
+              zoom: 20),
         ),
       );
     });
   }
 
   getAdressFromLatLng() {
-    placemarkFromCoordinates(location!.latitude, location!.longitude)
-        .then((value) {
+    //FIXME:boş/geçersiz adres kontrolü
+    placemarkFromCoordinates(lt!, lng!).then((value) {
       print(value[0].administrativeArea);
     });
   }
 
-  static final CameraPosition _kGooglePlex =
-      CameraPosition(target: const LatLng(37.743388, 29.104555), zoom: 14);
+  final CameraPosition _kGooglePlex =
+      const CameraPosition(target: LatLng(37.743388, 29.104555), zoom: 14);
+
+  move(position) {
+    setState(() {
+      _marker.first = _marker.first.copyWith(positionParam: position.target);
+      lt = _marker.first.position.latitude;
+      lng = _marker.first.position.longitude;
+    });
+    print("Locaion: $lt $lng");
+  }
+
+  MapType mapType() {
+    if (mapStatus == MapType.normal) {
+      mapStatus = MapType.normal;
+    } else {
+      mapStatus = MapType.normal;
+    }
+    return mapStatus;
+  }
+}
+
+ThemeData themeData() {
+  return ThemeData(
+      colorScheme:
+          ThemeData().colorScheme.copyWith(primary: Colors.green.shade700));
+}
 
   // _handleTap(LatLng tappedPoint) {
   //   setState(() {
@@ -156,5 +195,3 @@ class _GoogleMapsState extends State<GoogleMaps> {
   //   location = tappedPoint;
   //   print(location);
   // }
-
-}

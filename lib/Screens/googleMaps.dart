@@ -25,7 +25,6 @@ class _StoreLocationMapState extends State<StoreLocationMap> {
               markerId: MarkerId('0'),
               position: LatLng(37, 40),
             );
-
             _markers.add(marker);
           },
           onCameraMove: (position) {
@@ -51,6 +50,6 @@ class _StoreLocationMapState extends State<StoreLocationMap> {
     );
   }
 
-  static final CameraPosition _kGooglePlex =
-      CameraPosition(target: const LatLng(37.743388, 29.104555), zoom: 14);
+  final CameraPosition _kGooglePlex =
+      const CameraPosition(target: LatLng(37.743388, 29.104555), zoom: 14);
 }
